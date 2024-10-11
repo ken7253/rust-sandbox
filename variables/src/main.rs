@@ -12,14 +12,16 @@ fn main() {
 
     // shadowing
     let y = 5;
+    // y => 5
     println!("The value of y is: {}", y);
-
+    // y => 6
     let y = 6;
-    println!("The value of y is: {}", y);
 
     {
         let y = 10;
-
+        // y => 10
         println!("The value of y is: {}", y);
     }
+    // y => 6
+    println!("The value of y is: {}", y);
 }
