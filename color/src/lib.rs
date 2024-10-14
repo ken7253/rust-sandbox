@@ -24,32 +24,56 @@ impl Color {
 
         return reversed;
     }
+
+    fn complementary(&self) -> Color {
+        let max = self.red.max(self.green.max(self.blue));
+        let min = self.red.min(self.green.min(self.blue));
+        let buf = max + min;
+        let to_complementary = Color::new(buf - self.red, buf - self.green, buf - self.blue);
+
+        return to_complementary;
+    }
 }
 
-#[test]
-fn initialize() {
-    let color = Color::new(100, 20, 50);
+#[cfg(test)]
+mod tests {
+    use crate::Color;
 
-    assert_eq!(color.red, 100);
-    assert_eq!(color.green, 20);
-    assert_eq!(color.blue, 50);
-}
+    #[test]
+    fn initialize() {
+        let color = Color::new(100, 20, 50);
 
-#[test]
-fn to_hex_color() {
-    let color = Color::new(255, 255, 255);
-    let hex = color.to_hex();
+        assert_eq!(color.red, 100);
+        assert_eq!(color.green, 20);
+        assert_eq!(color.blue, 50);
+    }
 
-    let correct = "#FFFFFF";
-    assert_eq!(hex, correct);
-}
+    #[test]
+    fn to_hex_color() {
+        let color = Color::new(255, 255, 255);
+        let hex = color.to_hex();
 
-#[test]
-fn to_reverse_color() {
-    let color = Color::new(255, 255, 255);
-    let reverse = color.reverse();
+        let correct = "#FFFFFF";
+        assert_eq!(hex, correct);
+    }
 
-    assert_eq!(reverse.red, 0);
-    assert_eq!(reverse.green, 0);
-    assert_eq!(reverse.blue, 0);
+    #[test]
+    fn to_reverse_color() {
+        let color = Color::new(255, 255, 255);
+        let reverse = color.reverse();
+
+        assert_eq!(reverse.red, 0);
+        assert_eq!(reverse.green, 0);
+        assert_eq!(reverse.blue, 0);
+    }
+
+    #[test]
+    fn to_complementary_color() {
+        let color = Color::new(102, 153, 51);
+        let complementary = color.complementary();
+
+        assert_eq!(complementary.red, 102);
+        assert_eq!(complementary.green, 51);
+        assert_eq!(complementary.blue, 153);
+    }
 }
