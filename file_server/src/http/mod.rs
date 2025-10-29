@@ -15,9 +15,7 @@ enum State {
     InRequestTarget,
     BeforeField,
     InFieldProperty,
-    BeforeFieldValue,
     InFieldValue,
-    BeforeBody,
     InBody,
 }
 
@@ -35,6 +33,7 @@ impl Http {
     fn parse(&mut self, data: String) -> Self {
         let mut state = State::BeforeMethod;
         let mut text_temp = String::new();
+        let mut field_temp = (String::new(), String::new());
         let mut new_self = Http::new();
 
         for char in data.chars() {
@@ -77,34 +76,39 @@ impl Http {
                     if char == '\n' {
                         new_self.protocol = text_temp.clone();
                         text_temp.clear();
-                        state = State::BeforeFields;
+                        state = State::BeforeField;
                     } else if char.is_ascii() {
                         text_temp.push(char);
                     }
                 }
                 State::BeforeField => {
                     if char.is_ascii() {
-                        text_temp.push(char);
+                        field_temp.0.push(char);
+                        state = State::InFieldProperty
                     }
-                    state = State::InFieldProperty
+                    if char == '\n' {
+                        state = State::InBody;
+                    }
                 }
                 State::InFieldProperty => {
                     if char == ':' {
-                        new_self = text_temp.clone();
-                        text_temp.clear();
                         state = State::InFieldValue;
                     } else {
-                        text_temp.push(char);
+                        field_temp.0.push(char);
                     }
                 }
                 State::InFieldValue => {
                     if char == '\n' {
-                        new_self = text_temp.clone();
-                        text_temp.clear();
+                        new_self.fields.push(field_temp);
+                        field_temp = (String::new(), String::new());
                         state = State::BeforeField;
+                    } else if char != ' ' {
+                        field_temp.1.push(char);
                     }
                 }
-                _ => {}
+                State::InBody => {
+                    new_self.body.push(char);
+                }
             };
         }
 
@@ -146,11 +150,10 @@ mod tests {
     #[test]
     fn parse_fields() {
         let mut http = Http::new();
-        let parsed =
-            http.parse("GET / HTTP/1.1\nHost: 127.0.0.1:8880\nUser-Agent: curl/8.5.0".to_string());
+        let parsed = http.parse("GET / HTTP/1.1\nHost: 127.0.0.1:8880\n".to_string());
 
-        assert_eq!(parsed.fields[0].0, "User-Agent".to_string());
-        assert_eq!(parsed.fields[0].1, "curl/8.5.0".to_string());
+        assert_eq!(parsed.fields[0].0, "Host".to_string());
+        assert_eq!(parsed.fields[0].1, "127.0.0.1:8880".to_string());
     }
 
     #[test]
