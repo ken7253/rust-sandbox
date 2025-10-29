@@ -86,6 +86,14 @@ mod tests {
         assert_eq!(parsed.method, "GET".to_string());
     }
 
+    fn parse_request_target() {
+        let mut http = Http::new();
+        let parsed =
+            http.parse("GET / HTTP/1.1\nHost: 127.0.0.1:8880\nUser-Agent: curl/8.5.0".to_string());
+
+        assert_eq!(parsed.request_target, "/");
+    }
+
     #[test]
     fn parse_protocol() {
         let mut http = Http::new();
@@ -93,5 +101,25 @@ mod tests {
             http.parse("GET / HTTP/1.1\nHost: 127.0.0.1:8880\nUser-Agent: curl/8.5.0".to_string());
 
         assert_eq!(parsed.protocol, "HTTP/1.1")
+    }
+
+    fn parse_fields() {
+        let mut http = Http::new();
+        let parsed =
+            http.parse("GET / HTTP/1.1\nHost: 127.0.0.1:8880\nUser-Agent: curl/8.5.0".to_string());
+
+        let mut expect = Vec::from(("User-Agent", "curl/8.5.0"));
+
+        assert_eq!(parsed.fields, expect);
+    }
+
+    fn parse_body() {
+        let mut http = Http::new();
+        let parsed = http.parse(
+            "GET / HTTP/1.1\nHost: 127.0.0.1:8880\nUser-Agent: curl/8.5.0\n\n{foo: 'bar'}"
+                .to_string(),
+        );
+
+        assert_eq!(parsed.body, "{foo: 'bar'}");
     }
 }
