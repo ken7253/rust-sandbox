@@ -75,7 +75,7 @@ impl Http {
 
 #[cfg(test)]
 mod tests {
-    use crate::http::{self, Http};
+    use crate::http::Http;
 
     #[test]
     fn parse_method() {
@@ -108,9 +108,8 @@ mod tests {
         let parsed =
             http.parse("GET / HTTP/1.1\nHost: 127.0.0.1:8880\nUser-Agent: curl/8.5.0".to_string());
 
-        let mut expect = Vec::from(("User-Agent", "curl/8.5.0"));
-
-        assert_eq!(parsed.fields, expect);
+        assert_eq!(parsed.fields[0], "User-Agent".to_string());
+        assert_eq!(parsed.fields[1], "curl/8.5.0".to_string());
     }
 
     fn parse_body() {
