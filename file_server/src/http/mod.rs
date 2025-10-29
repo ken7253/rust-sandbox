@@ -11,7 +11,9 @@ enum State {
     InMethod,
     BeforeProtocol,
     InProtocol,
-    BeforeFields,
+    BeforeRequestTarget,
+    InRequestTarget,
+    BeforeField,
     InFieldProperty,
     BeforeFieldValue,
     InFieldValue,
@@ -42,12 +44,27 @@ impl Http {
                     state = State::InMethod;
                 }
                 State::InMethod => {
-                    if char == '/' {
+                    if char == ' ' {
                         new_self.method = text_temp.clone();
                         text_temp.clear();
-                        state = State::BeforeProtocol;
-                    } else if char != ' ' {
+                        state = State::BeforeRequestTarget;
+                    } else {
                         text_temp.push(char);
+                    }
+                }
+                State::BeforeRequestTarget => {
+                    if char != ' ' {
+                        text_temp.push(char);
+                        state = State::InRequestTarget;
+                    }
+                }
+                State::InRequestTarget => {
+                    if char != ' ' {
+                        text_temp.push(char);
+                    } else {
+                        new_self.request_target = text_temp.clone();
+                        text_temp.clear();
+                        state = State::BeforeProtocol
                     }
                 }
                 State::BeforeProtocol => {
@@ -63,6 +80,28 @@ impl Http {
                         state = State::BeforeFields;
                     } else if char.is_ascii() {
                         text_temp.push(char);
+                    }
+                }
+                State::BeforeField => {
+                    if char.is_ascii() {
+                        text_temp.push(char);
+                    }
+                    state = State::InFieldProperty
+                }
+                State::InFieldProperty => {
+                    if char == ':' {
+                        new_self = text_temp.clone();
+                        text_temp.clear();
+                        state = State::InFieldValue;
+                    } else {
+                        text_temp.push(char);
+                    }
+                }
+                State::InFieldValue => {
+                    if char == '\n' {
+                        new_self = text_temp.clone();
+                        text_temp.clear();
+                        state = State::BeforeField;
                     }
                 }
                 _ => {}
@@ -86,6 +125,7 @@ mod tests {
         assert_eq!(parsed.method, "GET".to_string());
     }
 
+    #[test]
     fn parse_request_target() {
         let mut http = Http::new();
         let parsed =
@@ -103,15 +143,17 @@ mod tests {
         assert_eq!(parsed.protocol, "HTTP/1.1")
     }
 
+    #[test]
     fn parse_fields() {
         let mut http = Http::new();
         let parsed =
             http.parse("GET / HTTP/1.1\nHost: 127.0.0.1:8880\nUser-Agent: curl/8.5.0".to_string());
 
-        assert_eq!(parsed.fields[0], "User-Agent".to_string());
-        assert_eq!(parsed.fields[1], "curl/8.5.0".to_string());
+        assert_eq!(parsed.fields[0].0, "User-Agent".to_string());
+        assert_eq!(parsed.fields[0].1, "curl/8.5.0".to_string());
     }
 
+    #[test]
     fn parse_body() {
         let mut http = Http::new();
         let parsed = http.parse(
