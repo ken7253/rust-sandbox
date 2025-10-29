@@ -1,4 +1,4 @@
-use std::io::{Read, Result};
+use std::io::{Read, Result, Write};
 use std::net::{TcpListener, TcpStream};
 
 mod http;
@@ -22,5 +22,9 @@ fn handler(mut stream: TcpStream) {
 
     println!("{}", String::from_utf8_lossy(&buffer[..]));
 
-    http::HttpParser::new();
+    let response_body = "<!doctype html><html lang=\"en\"><head><title>Example Domain</title><meta name=\"viewport\" content=\"width=device-width, initial-scale=1\"><body><h1>Example Domain</h1></body></html>";
+
+    stream
+        .write(format!("HTTP/1.1 200 OK\n\n{}", response_body).as_bytes())
+        .unwrap();
 }
