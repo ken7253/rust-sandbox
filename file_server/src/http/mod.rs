@@ -1,9 +1,10 @@
-struct Http {
-    method: String,
-    request_target: String,
-    protocol: String,
-    fields: Vec<(String, String)>,
-    body: String,
+#[derive(Debug)]
+pub struct Http {
+    pub method: String,
+    pub request_target: String,
+    pub protocol: String,
+    pub fields: Vec<(String, String)>,
+    pub body: String,
 }
 
 enum State {
@@ -20,7 +21,7 @@ enum State {
 }
 
 impl Http {
-    fn new() -> Self {
+    pub fn new() -> Self {
         Self {
             method: "".to_string(),
             request_target: "".to_string(),
@@ -30,7 +31,7 @@ impl Http {
         }
     }
 
-    fn parse(&mut self, data: String) -> Self {
+    pub fn parse(&mut self, data: &String) -> Self {
         let mut state = State::BeforeMethod;
         let mut text_temp = String::new();
         let mut field_temp = (String::new(), String::new());
@@ -107,10 +108,13 @@ impl Http {
                     }
                 }
                 State::InBody => {
-                    new_self.body.push(char);
+                    text_temp.push(char);
                 }
             };
         }
+
+        new_self.body = text_temp.clone();
+        text_temp.clear();
 
         return new_self;
     }
@@ -124,7 +128,7 @@ mod tests {
     fn parse_method() {
         let mut http = Http::new();
         let parsed =
-            http.parse("GET / HTTP/1.1\nHost: 127.0.0.1:8880\nUser-Agent: curl/8.5.0".to_string());
+            http.parse(&"GET / HTTP/1.1\nHost: 127.0.0.1:8880\nUser-Agent: curl/8.5.0".to_string());
 
         assert_eq!(parsed.method, "GET".to_string());
     }
@@ -133,7 +137,7 @@ mod tests {
     fn parse_request_target() {
         let mut http = Http::new();
         let parsed =
-            http.parse("GET / HTTP/1.1\nHost: 127.0.0.1:8880\nUser-Agent: curl/8.5.0".to_string());
+            http.parse(&"GET / HTTP/1.1\nHost: 127.0.0.1:8880\nUser-Agent: curl/8.5.0".to_string());
 
         assert_eq!(parsed.request_target, "/");
     }
@@ -142,7 +146,7 @@ mod tests {
     fn parse_protocol() {
         let mut http = Http::new();
         let parsed =
-            http.parse("GET / HTTP/1.1\nHost: 127.0.0.1:8880\nUser-Agent: curl/8.5.0".to_string());
+            http.parse(&"GET / HTTP/1.1\nHost: 127.0.0.1:8880\nUser-Agent: curl/8.5.0".to_string());
 
         assert_eq!(parsed.protocol, "HTTP/1.1")
     }
@@ -150,7 +154,7 @@ mod tests {
     #[test]
     fn parse_fields() {
         let mut http = Http::new();
-        let parsed = http.parse("GET / HTTP/1.1\nHost: 127.0.0.1:8880\n".to_string());
+        let parsed = http.parse(&"GET / HTTP/1.1\nHost: 127.0.0.1:8880\n".to_string());
 
         assert_eq!(parsed.fields[0].0, "Host".to_string());
         assert_eq!(parsed.fields[0].1, "127.0.0.1:8880".to_string());
@@ -160,7 +164,7 @@ mod tests {
     fn parse_body() {
         let mut http = Http::new();
         let parsed = http.parse(
-            "GET / HTTP/1.1\nHost: 127.0.0.1:8880\nUser-Agent: curl/8.5.0\n\n{foo: 'bar'}"
+            &"GET / HTTP/1.1\nHost: 127.0.0.1:8880\nUser-Agent: curl/8.5.0\n\n{foo: 'bar'}"
                 .to_string(),
         );
 

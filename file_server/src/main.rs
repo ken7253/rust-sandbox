@@ -20,7 +20,18 @@ fn handler(mut stream: TcpStream) {
 
     stream.read(&mut buffer).unwrap();
 
-    println!("{}", String::from_utf8_lossy(&buffer[..]));
+    let raw_request = String::from_utf8_lossy(&buffer[..]).to_string();
+
+    println!(
+        "[Req]:
+    {}",
+        raw_request
+    );
+
+    let mut parser = http::Http::new();
+    let request = parser.parse(&raw_request);
+
+    println!("{:?}", request);
 
     let response_body = "<!doctype html><html lang=\"en\"><head><title>Example Domain</title><meta name=\"viewport\" content=\"width=device-width, initial-scale=1\"><body><h1>Example Domain</h1></body></html>";
 
