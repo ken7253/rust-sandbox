@@ -38,6 +38,10 @@ impl Http {
         let mut new_self = Http::new();
 
         for char in data.chars() {
+            if char == '\0' {
+                break;
+            }
+
             let _ = match state {
                 State::BeforeMethod => {
                     text_temp.push(char);
@@ -83,7 +87,7 @@ impl Http {
                     }
                 }
                 State::BeforeField => {
-                    if char.is_ascii() {
+                    if char.is_alphanumeric() {
                         field_temp.0.push(char);
                         state = State::InFieldProperty
                     }

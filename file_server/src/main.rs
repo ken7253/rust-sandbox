@@ -22,12 +22,6 @@ fn handler(mut stream: TcpStream) {
 
     let raw_request = String::from_utf8_lossy(&buffer[..]).to_string();
 
-    println!(
-        "[Req]:
-    {}",
-        raw_request
-    );
-
     let mut parser = http::Http::new();
     let request = parser.parse(&raw_request);
 
