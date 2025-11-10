@@ -82,7 +82,7 @@ impl Http {
                         new_self.protocol = text_temp.clone();
                         text_temp.clear();
                         state = State::BeforeField;
-                    } else if char.is_ascii() {
+                    } else if char.is_ascii() && char != '\r' {
                         text_temp.push(char);
                     }
                 }
@@ -107,7 +107,7 @@ impl Http {
                         new_self.fields.push(field_temp);
                         field_temp = (String::new(), String::new());
                         state = State::BeforeField;
-                    } else if char != ' ' {
+                    } else if char != ' ' && char != '\r' {
                         field_temp.1.push(char);
                     }
                 }
@@ -168,7 +168,7 @@ mod tests {
     fn parse_body() {
         let mut http = Http::new();
         let parsed = http.parse(
-            &"GET / HTTP/1.1\nHost: 127.0.0.1:8880\nUser-Agent: curl/8.5.0\n\n{foo: 'bar'}"
+            &"GET / HTTP/1.1\nHost: 127.0.0.1:8880\nUser-Agent: curl/8.5.0\n\n{foo: \'bar\'}"
                 .to_string(),
         );
 
